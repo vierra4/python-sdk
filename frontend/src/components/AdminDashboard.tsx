@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useUser, UserButton } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -23,9 +25,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress
+  CircularProgress,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Stack
 } from '@mui/material';
-import { Refresh, Edit, Add } from '@mui/icons-material';
+import { Refresh, Edit, Add, ArrowBack } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Analytics {
@@ -67,6 +73,8 @@ interface SystemPrompt {
 }
 
 const AdminDashboard: React.FC = () => {
+  const { user } = useUser();
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [prompts, setPrompts] = useState<SystemPrompt[]>([]);
   const [loading, setLoading] = useState(false);
@@ -151,20 +159,44 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Admin Dashboard
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<Refresh />}
-          onClick={loadData}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
-      </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Navigation */}
+      <AppBar position="static" sx={{ bgcolor: 'background.paper' }}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => navigate('/dashboard')}
+            sx={{ mr: 2 }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+            Admin Dashboard
+          </Typography>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="body2" color="text.secondary">
+              {user?.firstName}
+            </Typography>
+            <UserButton />
+          </Stack>
+        </Toolbar>
+      </AppBar>
+
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" gutterBottom>
+            System Management
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={loadData}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+        </Box>
 
       {/* Analytics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -366,6 +398,7 @@ const AdminDashboard: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      </Box>
     </Box>
   );
 };

@@ -1,82 +1,75 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { AppBar, Toolbar, Typography, Container, Box, Tabs, Tab } from '@mui/material';
+import LandingPage from './components/LandingPage';
+import Dashboard from './components/Dashboard';
 import ChatInterface from './components/ChatInterface';
 import AdminDashboard from './components/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#1976d2',
+      main: '#3b82f6',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#8b5cf6',
     },
+    background: {
+      default: '#0f172a',
+      paper: '#1e293b',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
   },
 });
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+const clerkPubKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
+if (!clerkPubKey) {
+  throw new Error('Missing Clerk Publishable Key');
 }
 
 function App() {
-  const [tabValue, setTabValue] = useState(0);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Customer Support AI Platform
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      
-      <Container maxWidth="lg">
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example">
-            <Tab label="Customer Chat" />
-            <Tab label="Admin Dashboard" />
-          </Tabs>
-        </Box>
-        
-        <TabPanel value={tabValue} index={0}>
-          <ChatInterface />
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={1}>
-          <AdminDashboard />
-        </TabPanel>
-      </Container>
-    </ThemeProvider>
+    <ClerkProvider publishableKey={clerkPubKey!}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/chat" 
+              element={
+                <ProtectedRoute>
+                  <ChatInterface />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    </ClerkProvider>
   );
 }
 

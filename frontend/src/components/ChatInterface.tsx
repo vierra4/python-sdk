@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useUser, UserButton } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -14,9 +16,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress
+  CircularProgress,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Stack
 } from '@mui/material';
-import { Send, Person, SmartToy } from '@mui/icons-material';
+import { Send, Person, SmartToy, ArrowBack } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Message {
@@ -33,10 +39,15 @@ interface ChatSession {
 }
 
 const ChatInterface: React.FC = () => {
+  const { user } = useUser();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [session, setSession] = useState<ChatSession>({ sessionId: null, isActive: false });
-  const [customerInfo, setCustomerInfo] = useState({ email: '', name: '' });
+  const [customerInfo, setCustomerInfo] = useState({ 
+    email: user?.primaryEmailAddress?.emailAddress || '', 
+    name: user?.fullName || '' 
+  });
   const [showStartDialog, setShowStartDialog] = useState(true);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -140,8 +151,32 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <Box>
-      <Dialog open={showStartDialog} onClose={() => {}} maxWidth="sm" fullWidth>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Navigation */}
+      <AppBar position="static" sx={{ bgcolor: 'background.paper' }}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => navigate('/dashboard')}
+            sx={{ mr: 2 }}
+          >
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+            Customer Support Chat
+          </Typography>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="body2" color="text.secondary">
+              {user?.firstName}
+            </Typography>
+            <UserButton />
+          </Stack>
+        </Toolbar>
+      </AppBar>
+
+      <Box sx={{ p: 3 }}>
+        <Dialog open={showStartDialog} onClose={() => {}} maxWidth="sm" fullWidth>
         <DialogTitle>Start Customer Support Chat</DialogTitle>
         <DialogContent>
           <TextField
@@ -253,6 +288,7 @@ const ChatInterface: React.FC = () => {
           </Paper>
         </Box>
       )}
+      </Box>
     </Box>
   );
 };
